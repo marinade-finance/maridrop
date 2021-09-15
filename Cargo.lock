@@ -40,7 +40,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-access-control"
 version = "0.15.0"
-source = "git+https://github.com/project-serum/anchor.git#0faed886002a9b01ad0513c860e19d7570cb0221"
+source = "git+https://github.com/project-serum/anchor.git#8eec4d3e3dea73ad407b42a096490731ff94125c"
 dependencies = [
  "anchor-syn 0.15.0 (git+https://github.com/project-serum/anchor.git)",
  "anyhow",
@@ -68,7 +68,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-account"
 version = "0.15.0"
-source = "git+https://github.com/project-serum/anchor.git#0faed886002a9b01ad0513c860e19d7570cb0221"
+source = "git+https://github.com/project-serum/anchor.git#8eec4d3e3dea73ad407b42a096490731ff94125c"
 dependencies = [
  "anchor-syn 0.15.0 (git+https://github.com/project-serum/anchor.git)",
  "anyhow",
@@ -94,7 +94,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-error"
 version = "0.15.0"
-source = "git+https://github.com/project-serum/anchor.git#0faed886002a9b01ad0513c860e19d7570cb0221"
+source = "git+https://github.com/project-serum/anchor.git#8eec4d3e3dea73ad407b42a096490731ff94125c"
 dependencies = [
  "anchor-syn 0.15.0 (git+https://github.com/project-serum/anchor.git)",
  "proc-macro2",
@@ -118,7 +118,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-event"
 version = "0.15.0"
-source = "git+https://github.com/project-serum/anchor.git#0faed886002a9b01ad0513c860e19d7570cb0221"
+source = "git+https://github.com/project-serum/anchor.git#8eec4d3e3dea73ad407b42a096490731ff94125c"
 dependencies = [
  "anchor-syn 0.15.0 (git+https://github.com/project-serum/anchor.git)",
  "anyhow",
@@ -144,7 +144,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-interface"
 version = "0.15.0"
-source = "git+https://github.com/project-serum/anchor.git#0faed886002a9b01ad0513c860e19d7570cb0221"
+source = "git+https://github.com/project-serum/anchor.git#8eec4d3e3dea73ad407b42a096490731ff94125c"
 dependencies = [
  "anchor-syn 0.15.0 (git+https://github.com/project-serum/anchor.git)",
  "anyhow",
@@ -170,7 +170,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-program"
 version = "0.15.0"
-source = "git+https://github.com/project-serum/anchor.git#0faed886002a9b01ad0513c860e19d7570cb0221"
+source = "git+https://github.com/project-serum/anchor.git#8eec4d3e3dea73ad407b42a096490731ff94125c"
 dependencies = [
  "anchor-syn 0.15.0 (git+https://github.com/project-serum/anchor.git)",
  "anyhow",
@@ -195,7 +195,7 @@ dependencies = [
 [[package]]
 name = "anchor-attribute-state"
 version = "0.15.0"
-source = "git+https://github.com/project-serum/anchor.git#0faed886002a9b01ad0513c860e19d7570cb0221"
+source = "git+https://github.com/project-serum/anchor.git#8eec4d3e3dea73ad407b42a096490731ff94125c"
 dependencies = [
  "anchor-syn 0.15.0 (git+https://github.com/project-serum/anchor.git)",
  "anyhow",
@@ -220,7 +220,7 @@ dependencies = [
 [[package]]
 name = "anchor-derive-accounts"
 version = "0.15.0"
-source = "git+https://github.com/project-serum/anchor.git#0faed886002a9b01ad0513c860e19d7570cb0221"
+source = "git+https://github.com/project-serum/anchor.git#8eec4d3e3dea73ad407b42a096490731ff94125c"
 dependencies = [
  "anchor-syn 0.15.0 (git+https://github.com/project-serum/anchor.git)",
  "anyhow",
@@ -253,7 +253,7 @@ dependencies = [
 [[package]]
 name = "anchor-lang"
 version = "0.15.0"
-source = "git+https://github.com/project-serum/anchor.git#0faed886002a9b01ad0513c860e19d7570cb0221"
+source = "git+https://github.com/project-serum/anchor.git#8eec4d3e3dea73ad407b42a096490731ff94125c"
 dependencies = [
  "anchor-attribute-access-control 0.15.0 (git+https://github.com/project-serum/anchor.git)",
  "anchor-attribute-account 0.15.0 (git+https://github.com/project-serum/anchor.git)",
@@ -286,7 +286,7 @@ dependencies = [
 [[package]]
 name = "anchor-spl"
 version = "0.15.0"
-source = "git+https://github.com/project-serum/anchor.git#0faed886002a9b01ad0513c860e19d7570cb0221"
+source = "git+https://github.com/project-serum/anchor.git#8eec4d3e3dea73ad407b42a096490731ff94125c"
 dependencies = [
  "anchor-lang 0.15.0 (git+https://github.com/project-serum/anchor.git)",
  "lazy_static",
@@ -317,7 +317,7 @@ dependencies = [
 [[package]]
 name = "anchor-syn"
 version = "0.15.0"
-source = "git+https://github.com/project-serum/anchor.git#0faed886002a9b01ad0513c860e19d7570cb0221"
+source = "git+https://github.com/project-serum/anchor.git#8eec4d3e3dea73ad407b42a096490731ff94125c"
 dependencies = [
  "anyhow",
  "bs58 0.3.1",
@@ -764,9 +764,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.101"
+version = "0.2.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cb00336871be5ed2c8ed44b60ae9959dc5b9f08539422ed43f09e34ecaeba21"
+checksum = "a2a5ac8f984bfcf3a823267e5fde638acc3325f6496633a5da6bb6eb2171e103"
 
 [[package]]
 name = "libsecp256k1"
@@ -894,7 +894,7 @@ version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "486ea01961c4a818096de679a8b740b26d9033146ac5291b1c98557658f8cdd9"
 dependencies = [
- "proc-macro-crate 1.0.0",
+ "proc-macro-crate 1.1.0",
  "proc-macro2",
  "quote",
  "syn",
@@ -932,9 +932,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro-crate"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41fdbd1df62156fbc5945f4762632564d7d038153091c3fcf1067f6aef7cff92"
+checksum = "1ebace6889caf889b4d3f76becee12e90353f2b8c7d875534a71e5742f8f6f83"
 dependencies = [
  "thiserror",
  "toml",
@@ -1129,9 +1129,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.67"
+version = "1.0.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7f9e390c27c3c0ce8bc5d725f6e4d30a29d26659494aa4b17535f7522c5c950"
+checksum = "0f690853975602e1bfe1ccbf50504d67174e3bcf340f23b5ea9992e0587a52d8"
 dependencies = [
  "itoa",
  "ryu",

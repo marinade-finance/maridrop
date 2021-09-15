@@ -1,4 +1,5 @@
-use anchor_lang::{prelude::*, solana_program::clock::Slot};
+use anchor_lang::prelude::*;
+use anchor_lang::solana_program::clock::UnixTimestamp;
 use anchor_spl::token::transfer;
 use anchor_spl::token::{close_account, CloseAccount, TokenAccount, Transfer};
 use vipers::validate::Validate;
@@ -12,9 +13,9 @@ pub struct Treasury {
     pub token_store: Pubkey,    // where we store the token to be distributed
     pub rent_collector: Pubkey, // collect rent-free-lamports when closing accounts
     pub total_promised: u64,    // < token_store.amount, how much is promised now
-    pub start_slot: Slot,       // Prevent claiming earlier
-    pub end_slot: Slot,         // Can not close earlier
-    pub treasury_token_authority_bump: u8,
+    pub start_time: i64,        // Prevent claiming earlier
+    pub end_time: i64,          // Can not close earlier
+    pub token_authority_bump: u8,
 }
 
 impl Treasury {
@@ -28,21 +29,24 @@ pub struct InitTreasury<'info> {
     pub token_store: Account<'info, TokenAccount>,
 }
 
-impl<'info> Validate<'info> for InitTreasury<'info> {
-    fn validate(&self) -> ProgramResult {
-        let treasury_token_authority = Pubkey::create_program_address(
+impl<'info> InitTreasury<'info> {
+    pub fn validate(&self, token_authority_bump: u8) -> ProgramResult {
+        let (token_authority, canonical_token_authority_bump) = Pubkey::find_program_address(
             &[
                 Treasury::TOKEN_AUTHORITY_SEED,
                 &self.treasury_account.key().to_bytes(),
             ],
             &crate::ID,
-        )
-        .map_err(|_| ProgramError::from(ErrorCode::InvalidTreasuryTokenAuthorityBump))?;
+        );
 
-        if self.token_store.owner != treasury_token_authority {
+        if canonical_token_authority_bump != token_authority_bump {
+            return Err(ErrorCode::InvalidTreasuryTokenAuthorityBump.into());
+        }
+
+        if self.token_store.owner != token_authority {
             msg!(
                 "Expected treasury token authority {}",
-                treasury_token_authority
+                token_authority
             );
             return Err(ErrorCode::TreasuryTokenAuthorityDoesNotMatch.into());
         }
@@ -53,21 +57,24 @@ impl<'info> Validate<'info> for InitTreasury<'info> {
 
         Ok(())
     }
-}
 
-impl<'info> InitTreasury<'info> {
     pub fn process(
         &mut self,
         admin_authority: Pubkey,
         rent_collector: Pubkey,
-        start_slot: u64,
-        treasury_token_authority_bump: u8,
+        start_time: UnixTimestamp,
+        end_time: UnixTimestamp,
+        token_authority_bump: u8,
     ) -> ProgramResult {
-        self.treasury_account.admin_authority = admin_authority;
-        self.treasury_account.token_store = self.token_store.key();
-        self.treasury_account.rent_collector = rent_collector;
-        self.treasury_account.start_slot = start_slot;
-        self.treasury_account.treasury_token_authority_bump = treasury_token_authority_bump;
+        *self.treasury_account = Treasury {
+            admin_authority,
+            token_store: self.token_store.key(),
+            rent_collector,
+            total_promised: 0,
+            start_time,
+            end_time,
+            token_authority_bump,
+        };
         Ok(())
     }
 }
@@ -81,8 +88,8 @@ pub struct CloseTreasury<'info> {
     #[account(seeds = [
         Treasury::TOKEN_AUTHORITY_SEED,
         &treasury_account.key().to_bytes()],
-       bump = treasury_account.treasury_token_authority_bump)]
-    pub treasury_token_authority: AccountInfo<'info>,
+       bump = treasury_account.token_authority_bump)]
+    pub token_authority: AccountInfo<'info>,
     #[account(mut)]
     pub token_store: Account<'info, TokenAccount>, // closes this account
     #[account(mut)]
@@ -96,7 +103,7 @@ pub struct CloseTreasury<'info> {
 
 impl<'info> Validate<'info> for CloseTreasury<'info> {
     fn validate(&self) -> ProgramResult {
-        if Clock::get()?.slot < self.treasury_account.end_slot {
+        if Clock::get()?.unix_timestamp < self.treasury_account.end_time {
             return Err(ErrorCode::TooEarlyToClose.into());
         }
 
@@ -105,7 +112,7 @@ impl<'info> Validate<'info> for CloseTreasury<'info> {
         }
 
         if self.transfer_token_to.key() == self.token_store.key() {
-            return Err(ErrorCode::CloseTargetIsSource.into())
+            return Err(ErrorCode::CloseTargetIsSource.into());
         }
 
         Ok(())
@@ -120,12 +127,12 @@ impl<'info> CloseTreasury<'info> {
                 Transfer {
                     from: self.token_store.to_account_info(),
                     to: self.transfer_token_to.to_account_info(),
-                    authority: self.treasury_token_authority.clone(),
+                    authority: self.token_authority.clone(),
                 },
                 &[&[
                     Treasury::TOKEN_AUTHORITY_SEED,
                     &self.treasury_account.key().to_bytes(),
-                    &[self.treasury_account.treasury_token_authority_bump],
+                    &[self.treasury_account.token_authority_bump],
                 ]],
             ),
             self.token_store.amount,
@@ -136,12 +143,12 @@ impl<'info> CloseTreasury<'info> {
             CloseAccount {
                 account: self.token_store.to_account_info(),
                 destination: self.rent_collector.clone(),
-                authority: self.treasury_token_authority.clone(),
+                authority: self.token_authority.clone(),
             },
             &[&[
                 Treasury::TOKEN_AUTHORITY_SEED,
                 &self.treasury_account.key().to_bytes(),
-                &[self.treasury_account.treasury_token_authority_bump],
+                &[self.treasury_account.token_authority_bump],
             ]],
         ))?;
 

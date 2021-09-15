@@ -7,7 +7,7 @@ pub mod treasury;
 use crate::promise::*;
 use crate::treasury::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("AaKhDmJu1rD23TL9qkoP9MzsK5agmcUcFRkthMV9643g");
 
 #[program]
 pub mod maridrop {
@@ -15,19 +15,21 @@ pub mod maridrop {
 
     use vipers::validate::Validate;
 
-    #[access_control(ctx.accounts.validate())]
+    #[access_control(ctx.accounts.validate(token_authority_bump))]
     pub fn init_treasury(
         ctx: Context<InitTreasury>,
         admin_authority: Pubkey,
         rent_collector: Pubkey,
-        start_slot: u64,
-        treasury_token_authority_bump: u8,
+        start_time: i64,
+        end_time: i64,
+        token_authority_bump: u8,
     ) -> ProgramResult {
         ctx.accounts.process(
             admin_authority,
             rent_collector,
-            start_slot,
-            treasury_token_authority_bump,
+            start_time,
+            end_time,
+            token_authority_bump,
         )
     }
 

@@ -47,9 +47,11 @@ impl<'info> InitPromise<'info> {
     }
 
     pub fn process(&mut self, target_authority: Pubkey, amount: u64) -> ProgramResult {
-        self.promise_account.target_authority = target_authority;
-        self.promise_account.treasury_account = self.treasury_account.key();
-        self.promise_account.amount = amount;
+        *self.promise_account = Promise {
+            target_authority,
+            treasury_account: self.treasury_account.key(),
+            amount,
+        };
 
         self.treasury_account.total_promised += amount;
 
@@ -68,8 +70,8 @@ pub struct Claim<'info> {
     #[account(seeds = [
         Treasury::TOKEN_AUTHORITY_SEED,
         &treasury_account.key().to_bytes()],
-       bump = treasury_account.treasury_token_authority_bump)]
-    pub treasury_token_authority: AccountInfo<'info>,
+       bump = treasury_account.token_authority_bump)]
+    pub token_authority: AccountInfo<'info>,
     #[account(mut)]
     pub token_store: Account<'info, TokenAccount>,
     #[account(mut)]
@@ -83,7 +85,7 @@ pub struct Claim<'info> {
 
 impl<'info> Validate<'info> for Claim<'info> {
     fn validate(&self) -> ProgramResult {
-        if Clock::get()?.slot < self.treasury_account.start_slot {
+        if Clock::get()?.unix_timestamp < self.treasury_account.start_time {
             return Err(ErrorCode::NonStarted.into());
         }
 
@@ -99,12 +101,12 @@ impl<'info> Claim<'info> {
                 Transfer {
                     from: self.token_store.to_account_info(),
                     to: self.transfer_token_to.to_account_info(),
-                    authority: self.treasury_token_authority.clone(),
+                    authority: self.token_authority.clone(),
                 },
                 &[&[
                     Treasury::TOKEN_AUTHORITY_SEED,
                     &self.treasury_account.key().to_bytes(),
-                    &[self.treasury_account.treasury_token_authority_bump],
+                    &[self.treasury_account.token_authority_bump],
                 ]],
             ),
             self.promise_account.amount,
@@ -142,7 +144,7 @@ pub struct ClosePromise<'info> {
 
 impl<'info> Validate<'info> for ClosePromise<'info> {
     fn validate(&self) -> ProgramResult {
-        if Clock::get()?.slot < self.treasury_account.end_slot {
+        if Clock::get()?.unix_timestamp < self.treasury_account.end_time {
             return Err(ErrorCode::TooEarlyToClose.into());
         }
 

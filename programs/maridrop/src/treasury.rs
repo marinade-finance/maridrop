@@ -1,8 +1,6 @@
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::clock::UnixTimestamp;
-use anchor_spl::token::transfer;
+use anchor_lang::{prelude::*, solana_program::{system_program, clock::UnixTimestamp}};
+use anchor_spl::token::{Token, transfer};
 use anchor_spl::token::{close_account, CloseAccount, TokenAccount, Transfer};
-use vipers::validate::Validate;
 
 use crate::error::ErrorCode;
 
@@ -30,18 +28,20 @@ pub struct InitTreasury<'info> {
 }
 
 impl<'info> InitTreasury<'info> {
-    pub fn validate(&self, token_authority_bump: u8) -> ProgramResult {
-        let (token_authority, canonical_token_authority_bump) = Pubkey::find_program_address(
+    pub fn process(
+        &mut self,
+        admin_authority: Pubkey,
+        rent_collector: Pubkey,
+        start_time: UnixTimestamp,
+        end_time: UnixTimestamp,
+    ) -> ProgramResult {
+        let (token_authority, token_authority_bump) = Pubkey::find_program_address(
             &[
                 Treasury::TOKEN_AUTHORITY_SEED,
                 &self.treasury_account.key().to_bytes(),
             ],
             &crate::ID,
         );
-
-        if canonical_token_authority_bump != token_authority_bump {
-            return Err(ErrorCode::InvalidTreasuryTokenAuthorityBump.into());
-        }
 
         if self.token_store.owner != token_authority {
             msg!(
@@ -52,20 +52,13 @@ impl<'info> InitTreasury<'info> {
         }
 
         if self.token_store.delegate.is_some() {
-            return Err(ErrorCode::TreasuryTokenAccountCanNotBeDelegated.into());
+            return Err(ErrorCode::TreasuryTokenAccountMustNotBeDelegated.into());
         }
 
-        Ok(())
-    }
+        if self.token_store.close_authority.is_some() {
+            return Err(ErrorCode::TreasuryTokenAccountMustNotBeCloseable.into());
+        }
 
-    pub fn process(
-        &mut self,
-        admin_authority: Pubkey,
-        rent_collector: Pubkey,
-        start_time: UnixTimestamp,
-        end_time: UnixTimestamp,
-        token_authority_bump: u8,
-    ) -> ProgramResult {
         *self.treasury_account = Treasury {
             admin_authority,
             token_store: self.token_store.key(),
@@ -83,26 +76,24 @@ impl<'info> InitTreasury<'info> {
 pub struct CloseTreasury<'info> {
     #[account(mut, has_one = admin_authority, has_one = token_store, has_one = rent_collector)]
     pub treasury_account: Account<'info, Treasury>,
-    #[account(signer)]
-    pub admin_authority: AccountInfo<'info>,
+    pub admin_authority: Signer<'info>,
     #[account(seeds = [
         Treasury::TOKEN_AUTHORITY_SEED,
         &treasury_account.key().to_bytes()],
        bump = treasury_account.token_authority_bump)]
-    pub token_authority: AccountInfo<'info>,
+    pub token_authority: UncheckedAccount<'info>,
     #[account(mut)]
     pub token_store: Account<'info, TokenAccount>, // closes this account
     #[account(mut)]
     pub transfer_token_to: Account<'info, TokenAccount>,
-    #[account(mut, owner = vipers::program_ids::system::ID)]
-    pub rent_collector: AccountInfo<'info>,
+    #[account(mut, owner = system_program::ID)]
+    pub rent_collector: UncheckedAccount<'info>,
 
-    #[account(address = vipers::program_ids::token::ID)]
-    pub token_program: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
 }
 
-impl<'info> Validate<'info> for CloseTreasury<'info> {
-    fn validate(&self) -> ProgramResult {
+impl<'info> CloseTreasury<'info> {
+    pub fn process(&mut self) -> ProgramResult {
         if Clock::get()?.unix_timestamp < self.treasury_account.end_time {
             return Err(ErrorCode::TooEarlyToClose.into());
         }
@@ -115,19 +106,13 @@ impl<'info> Validate<'info> for CloseTreasury<'info> {
             return Err(ErrorCode::CloseTargetIsSource.into());
         }
 
-        Ok(())
-    }
-}
-
-impl<'info> CloseTreasury<'info> {
-    pub fn process(&mut self) -> ProgramResult {
         transfer(
             CpiContext::new_with_signer(
-                self.token_program.clone(),
+                self.token_program.to_account_info(),
                 Transfer {
                     from: self.token_store.to_account_info(),
                     to: self.transfer_token_to.to_account_info(),
-                    authority: self.token_authority.clone(),
+                    authority: self.token_authority.to_account_info(),
                 },
                 &[&[
                     Treasury::TOKEN_AUTHORITY_SEED,
@@ -139,11 +124,11 @@ impl<'info> CloseTreasury<'info> {
         )?;
 
         close_account(CpiContext::new_with_signer(
-            self.token_program.clone(),
+            self.token_program.to_account_info(),
             CloseAccount {
                 account: self.token_store.to_account_info(),
-                destination: self.rent_collector.clone(),
-                authority: self.token_authority.clone(),
+                destination: self.rent_collector.to_account_info(),
+                authority: self.token_authority.to_account_info(),
             },
             &[&[
                 Treasury::TOKEN_AUTHORITY_SEED,

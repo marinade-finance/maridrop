@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{transfer, TokenAccount, Transfer};
-use vipers::validate::Validate;
+use anchor_spl::token::{Token, TokenAccount, Transfer, transfer};
 
 use crate::{error::ErrorCode, treasury::Treasury};
 
@@ -21,8 +20,7 @@ impl Promise {
 pub struct InitPromise<'info> {
     #[account(mut, has_one = admin_authority, has_one = token_store)]
     pub treasury_account: Account<'info, Treasury>,
-    #[account(signer)]
-    pub admin_authority: AccountInfo<'info>,
+    pub admin_authority: Signer<'info>,
     #[account(init, payer = rent_payer, seeds = [
         Promise::ACCOUNT_SEED,
         &treasury_account.key().to_bytes(),
@@ -30,23 +28,17 @@ pub struct InitPromise<'info> {
         bump = bump)]
     pub promise_account: Account<'info, Promise>,
     pub token_store: Account<'info, TokenAccount>,
-    #[account(mut, signer)]
-    pub rent_payer: AccountInfo<'info>,
+    pub rent_payer: Signer<'info>,
 
-    #[account(address = vipers::program_ids::system::ID)]
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 impl<'info> InitPromise<'info> {
-    pub fn validate(&self, amount: u64) -> ProgramResult {
+    pub fn process(&mut self, target_authority: Pubkey, amount: u64) -> ProgramResult {
         if self.treasury_account.total_promised + amount > self.token_store.amount {
             return Err(ErrorCode::InsufficientPromiseCreationFunds.into());
         }
 
-        Ok(())
-    }
-
-    pub fn process(&mut self, target_authority: Pubkey, amount: u64) -> ProgramResult {
         *self.promise_account = Promise {
             target_authority,
             treasury_account: self.treasury_account.key(),
@@ -65,43 +57,35 @@ pub struct Claim<'info> {
     pub promise_account: Account<'info, Promise>,
     #[account(mut, has_one = token_store, has_one = rent_collector)]
     pub treasury_account: Account<'info, Treasury>,
-    #[account(signer)]
-    pub target_authority: AccountInfo<'info>,
+    pub target_authority: Signer<'info>,
     #[account(seeds = [
         Treasury::TOKEN_AUTHORITY_SEED,
         &treasury_account.key().to_bytes()],
        bump = treasury_account.token_authority_bump)]
-    pub token_authority: AccountInfo<'info>,
+    pub token_authority: UncheckedAccount<'info>,
     #[account(mut)]
     pub token_store: Account<'info, TokenAccount>,
     #[account(mut)]
     pub transfer_token_to: Account<'info, TokenAccount>,
     #[account(mut)]
-    pub rent_collector: AccountInfo<'info>,
+    pub rent_collector: UncheckedAccount<'info>,
 
-    #[account(address = vipers::program_ids::token::ID)]
-    pub token_program: AccountInfo<'info>,
-}
-
-impl<'info> Validate<'info> for Claim<'info> {
-    fn validate(&self) -> ProgramResult {
-        if Clock::get()?.unix_timestamp < self.treasury_account.start_time {
-            return Err(ErrorCode::NonStarted.into());
-        }
-
-        Ok(())
-    }
+    pub token_program: Program<'info, Token>,
 }
 
 impl<'info> Claim<'info> {
     pub fn process(&mut self) -> ProgramResult {
+        if Clock::get()?.unix_timestamp < self.treasury_account.start_time {
+            return Err(ErrorCode::NonStarted.into());
+        }
+
         transfer(
             CpiContext::new_with_signer(
-                self.token_program.clone(),
+                self.token_program.to_account_info(),
                 Transfer {
                     from: self.token_store.to_account_info(),
                     to: self.transfer_token_to.to_account_info(),
-                    authority: self.token_authority.clone(),
+                    authority: self.token_authority.to_account_info(),
                 },
                 &[&[
                     Treasury::TOKEN_AUTHORITY_SEED,
@@ -133,27 +117,20 @@ impl<'info> Claim<'info> {
 #[derive(Accounts)]
 pub struct ClosePromise<'info> {
     #[account(mut, has_one = treasury_account)]
-    pub promise_account: ProgramAccount<'info, Promise>,
+    pub promise_account: Account<'info, Promise>,
     #[account(mut, has_one = admin_authority, has_one = rent_collector)]
-    pub treasury_account: ProgramAccount<'info, Treasury>,
-    #[account(signer)]
-    pub admin_authority: AccountInfo<'info>,
+    pub treasury_account: Account<'info, Treasury>,
+    pub admin_authority: Signer<'info>,
     #[account(mut)]
-    pub rent_collector: AccountInfo<'info>,
-}
-
-impl<'info> Validate<'info> for ClosePromise<'info> {
-    fn validate(&self) -> ProgramResult {
-        if Clock::get()?.unix_timestamp < self.treasury_account.end_time {
-            return Err(ErrorCode::TooEarlyToClose.into());
-        }
-
-        Ok(())
-    }
+    pub rent_collector: UncheckedAccount<'info>,
 }
 
 impl<'info> ClosePromise<'info> {
     pub fn process(&mut self) -> ProgramResult {
+        if Clock::get()?.unix_timestamp < self.treasury_account.end_time {
+            return Err(ErrorCode::TooEarlyToClose.into());
+        }
+
         self.treasury_account.total_promised = self
             .treasury_account
             .total_promised

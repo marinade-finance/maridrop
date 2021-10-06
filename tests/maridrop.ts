@@ -75,7 +75,7 @@ describe('maridrop', () => {
     );
 
     transaction.add(await program.instruction.initTreasury(
-      adminAuthority.publicKey, program.provider.wallet.publicKey, new anchor.BN(0), new anchor.BN(0), tokenStoreAuthorityBump, {
+      adminAuthority.publicKey, program.provider.wallet.publicKey, new anchor.BN(0), new anchor.BN(0), {
       accounts: {
         treasuryAccount: treasuryKey.publicKey,
         tokenStore: tokenStore.publicKey,

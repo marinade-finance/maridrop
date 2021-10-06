@@ -1,3 +1,5 @@
+anchor_version = "0.17.0"
+
 [programs.localnet]
 maridrop = "AaKhDmJu1rD23TL9qkoP9MzsK5agmcUcFRkthMV9643g"
 
@@ -9,4 +11,4 @@ cluster = "localnet"
 wallet = "/home/aankor/.config/solana/id.json"
 
 [scripts]
-test = "mocha -t 1000000 tests/"
+test = "npx ts-mocha -t 1000000 tests/*.ts"

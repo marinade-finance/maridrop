@@ -15,7 +15,9 @@ pub enum ErrorCode {
     #[msg("Can not close by moving tokens to the same account")]
     CloseTargetIsSource,
     #[msg("Insufficient funds to make this promise")]
-    InsufficientPromiseCreationFunds,
+    InsufficientPromiseFunds,
     #[msg("Airdrop is not started yet")]
     NonStarted,
+    #[msg("Can not remove already promised after airdrop start")]
+    CanNotWithdrawPromiseAfterStart
 }

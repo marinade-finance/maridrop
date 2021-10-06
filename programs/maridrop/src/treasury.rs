@@ -9,8 +9,9 @@ use crate::error::ErrorCode;
 pub struct Treasury {
     pub admin_authority: Pubkey,
     pub token_store: Pubkey,    // where we store the token to be distributed
-    pub rent_collector: Pubkey, // collect rent-free-lamports when closing accounts
-    pub total_promised: u64,    // < token_store.amount, how much is promised now
+    pub total_promised: u64,    // total promised including already claimed
+    pub total_non_claimed: u64, // <= token_store.amount, how much is promised but not yet claimed now
+    pub promise_count: u64,     // number of unique user promise accounts
     pub start_time: i64,        // Prevent claiming earlier
     pub end_time: i64,          // Can not close earlier
     pub token_authority_bump: u8,
@@ -31,7 +32,6 @@ impl<'info> InitTreasury<'info> {
     pub fn process(
         &mut self,
         admin_authority: Pubkey,
-        rent_collector: Pubkey,
         start_time: UnixTimestamp,
         end_time: UnixTimestamp,
     ) -> ProgramResult {
@@ -62,8 +62,9 @@ impl<'info> InitTreasury<'info> {
         *self.treasury_account = Treasury {
             admin_authority,
             token_store: self.token_store.key(),
-            rent_collector,
             total_promised: 0,
+            total_non_claimed: 0,
+            promise_count: 0,
             start_time,
             end_time,
             token_authority_bump,
@@ -74,7 +75,7 @@ impl<'info> InitTreasury<'info> {
 
 #[derive(Accounts)]
 pub struct CloseTreasury<'info> {
-    #[account(mut, has_one = admin_authority, has_one = token_store, has_one = rent_collector)]
+    #[account(mut, has_one = admin_authority, has_one = token_store)]
     pub treasury_account: Account<'info, Treasury>,
     pub admin_authority: Signer<'info>,
     #[account(seeds = [
@@ -98,7 +99,7 @@ impl<'info> CloseTreasury<'info> {
             return Err(ErrorCode::TooEarlyToClose.into());
         }
 
-        if self.treasury_account.total_promised > 0 {
+        if self.treasury_account.promise_count > 0 {
             return Err(ErrorCode::ClosingTreasuryWithPromises.into());
         }
 

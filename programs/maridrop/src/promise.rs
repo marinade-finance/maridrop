@@ -1,5 +1,5 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount, Transfer, transfer};
+use anchor_lang::{prelude::*, solana_program::system_program};
+use anchor_spl::token::{transfer, Token, TokenAccount, Transfer};
 
 use crate::{error::ErrorCode, treasury::Treasury};
 
@@ -8,7 +8,8 @@ use crate::{error::ErrorCode, treasury::Treasury};
 pub struct Promise {
     pub target_authority: Pubkey, // user's pubkey
     pub treasury_account: Pubkey, // main state
-    pub amount: u64,              // gift amount
+    pub total_amount: u64,        // gift amount
+    pub non_claimed_amount: u64,
 }
 
 impl Promise {
@@ -34,18 +35,56 @@ pub struct InitPromise<'info> {
 }
 
 impl<'info> InitPromise<'info> {
-    pub fn process(&mut self, target_authority: Pubkey, amount: u64) -> ProgramResult {
-        if self.treasury_account.total_promised + amount > self.token_store.amount {
-            return Err(ErrorCode::InsufficientPromiseCreationFunds.into());
-        }
-
+    pub fn process(&mut self, target_authority: Pubkey) -> ProgramResult {
         *self.promise_account = Promise {
             target_authority,
             treasury_account: self.treasury_account.key(),
-            amount,
+            total_amount: 0,
+            non_claimed_amount: 0,
         };
 
-        self.treasury_account.total_promised += amount;
+        self.treasury_account.promise_count += 1;
+
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+pub struct SetPromiseAmount<'info> {
+    #[account(mut, has_one = treasury_account)]
+    pub promise_account: Account<'info, Promise>,
+    #[account(mut, has_one = admin_authority, has_one = token_store)]
+    pub treasury_account: Account<'info, Treasury>,
+    pub token_store: Account<'info, TokenAccount>,
+    pub admin_authority: Signer<'info>,
+}
+
+impl<'info> SetPromiseAmount<'info> {
+    pub fn process(&mut self, new_total_amount: u64) -> ProgramResult {
+        if Clock::get()?.unix_timestamp >= self.treasury_account.start_time
+            && new_total_amount < self.promise_account.total_amount
+        {
+            return Err(ErrorCode::CanNotWithdrawPromiseAfterStart.into());
+        }
+        let claimed_amount =
+            self.promise_account.total_amount - self.promise_account.non_claimed_amount;
+        if new_total_amount < claimed_amount {
+            // Must be unreachable
+            return Err(ErrorCode::CanNotWithdrawPromiseAfterStart.into());
+        }
+        let new_non_claimed = new_total_amount - claimed_amount;
+        self.treasury_account.total_promised = (self.treasury_account.total_promised
+            + new_total_amount)
+            .saturating_sub(self.promise_account.total_amount);
+        let new_total_non_claimed = (self.treasury_account.total_non_claimed + new_non_claimed)
+            .saturating_sub(self.promise_account.non_claimed_amount);
+        if new_total_non_claimed > self.token_store.amount {
+            return Err(ErrorCode::InsufficientPromiseFunds.into());
+        }
+        self.treasury_account.total_non_claimed = new_total_non_claimed;
+
+        self.promise_account.total_amount = new_total_amount;
+        self.promise_account.non_claimed_amount = new_non_claimed;
 
         Ok(())
     }
@@ -55,7 +94,7 @@ impl<'info> InitPromise<'info> {
 pub struct Claim<'info> {
     #[account(mut, has_one = target_authority, has_one = treasury_account)]
     pub promise_account: Account<'info, Promise>,
-    #[account(mut, has_one = token_store, has_one = rent_collector)]
+    #[account(mut, has_one = token_store)]
     pub treasury_account: Account<'info, Treasury>,
     pub target_authority: Signer<'info>,
     #[account(seeds = [
@@ -67,8 +106,6 @@ pub struct Claim<'info> {
     pub token_store: Account<'info, TokenAccount>,
     #[account(mut)]
     pub transfer_token_to: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub rent_collector: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -79,6 +116,7 @@ impl<'info> Claim<'info> {
             return Err(ErrorCode::NonStarted.into());
         }
 
+        let amount = self.promise_account.non_claimed_amount;
         transfer(
             CpiContext::new_with_signer(
                 self.token_program.to_account_info(),
@@ -93,22 +131,13 @@ impl<'info> Claim<'info> {
                     &[self.treasury_account.token_authority_bump],
                 ]],
             ),
-            self.promise_account.amount,
+            amount,
         )?;
-        self.treasury_account.total_promised = self
+        self.promise_account.non_claimed_amount = 0;
+        self.treasury_account.total_non_claimed = self
             .treasury_account
-            .total_promised
-            .saturating_sub(self.promise_account.amount);
-
-        self.promise_account.amount = 0;
-        **self.rent_collector.lamports.as_ref().borrow_mut() +=
-            self.promise_account.to_account_info().lamports();
-        **self
-            .promise_account
-            .to_account_info()
-            .lamports
-            .as_ref()
-            .borrow_mut() = 0;
+            .total_non_claimed
+            .saturating_sub(amount);
 
         Ok(())
     }
@@ -118,10 +147,10 @@ impl<'info> Claim<'info> {
 pub struct ClosePromise<'info> {
     #[account(mut, has_one = treasury_account)]
     pub promise_account: Account<'info, Promise>,
-    #[account(mut, has_one = admin_authority, has_one = rent_collector)]
+    #[account(mut, has_one = admin_authority)]
     pub treasury_account: Account<'info, Treasury>,
     pub admin_authority: Signer<'info>,
-    #[account(mut)]
+    #[account(mut, owner = system_program::ID)]
     pub rent_collector: UncheckedAccount<'info>,
 }
 
@@ -131,12 +160,21 @@ impl<'info> ClosePromise<'info> {
             return Err(ErrorCode::TooEarlyToClose.into());
         }
 
+        self.treasury_account.total_non_claimed = self
+            .treasury_account
+            .total_non_claimed
+            .saturating_sub(self.promise_account.non_claimed_amount);
+        // Cancel promise
         self.treasury_account.total_promised = self
             .treasury_account
             .total_promised
-            .saturating_sub(self.promise_account.amount);
+            .saturating_sub(self.promise_account.total_amount);
 
-        self.promise_account.amount = 0;
+        self.treasury_account.promise_count = self.treasury_account.promise_count.saturating_sub(1);
+
+        // while solana does not kill account
+        self.promise_account.non_claimed_amount = 0;
+        self.promise_account.total_amount = 0;
         **self.rent_collector.lamports.as_ref().borrow_mut() +=
             self.promise_account.to_account_info().lamports();
         **self

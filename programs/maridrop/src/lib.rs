@@ -16,13 +16,11 @@ pub mod maridrop {
     pub fn init_treasury(
         ctx: Context<InitTreasury>,
         admin_authority: Pubkey,
-        rent_collector: Pubkey,
         start_time: i64,
         end_time: i64,
     ) -> ProgramResult {
         ctx.accounts.process(
             admin_authority,
-            rent_collector,
             start_time,
             end_time,
         )
@@ -35,10 +33,16 @@ pub mod maridrop {
     pub fn init_promise(
         ctx: Context<InitPromise>,
         target_authority: Pubkey,
-        amount: u64,
-        bump: u8,
+        _bump: u8, // for anchor macro use
     ) -> ProgramResult {
-        ctx.accounts.process(target_authority, amount)
+        ctx.accounts.process(target_authority)
+    }
+
+    pub fn set_promise_amount(
+        ctx: Context<SetPromiseAmount>,
+        new_total_amount: u64
+    ) -> ProgramResult {
+        ctx.accounts.process(new_total_amount)
     }
 
     pub fn claim(ctx: Context<Claim>) -> ProgramResult {

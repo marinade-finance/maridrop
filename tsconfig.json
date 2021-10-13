@@ -3,10 +3,9 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "build",
-    "esModuleInterop": true
+    "esModuleInterop": true,
   },
   "include": [
-    "cli/**/*.ts",
-    "test/**/*.ts"
+    "tests/**/*.ts"
   ]
 }

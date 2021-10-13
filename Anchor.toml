@@ -1,7 +1,7 @@
 anchor_version = "0.17.0"
 
 [programs.localnet]
-maridrop = "AaKhDmJu1rD23TL9qkoP9MzsK5agmcUcFRkthMV9643g"
+maridrop = "mrdpo5HyUm6ajvGJzBDjLTsNM41cb9hXzZq5L5WXy9z"
 
 [registry]
 url = "https://anchor.projectserum.com"

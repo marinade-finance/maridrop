@@ -7,7 +7,7 @@ pub mod treasury;
 use crate::promise::*;
 use crate::treasury::*;
 
-declare_id!("AaKhDmJu1rD23TL9qkoP9MzsK5agmcUcFRkthMV9643g");
+declare_id!("mrdpo5HyUm6ajvGJzBDjLTsNM41cb9hXzZq5L5WXy9z");
 
 #[program]
 pub mod maridrop {

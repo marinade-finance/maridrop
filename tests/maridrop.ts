@@ -1,5 +1,5 @@
 // eslint-disable-next-line node/no-unsupported-features/node-builtins
-import { TextEncoder } from 'util';
+import {TextEncoder} from 'util';
 import * as token from '@solana/spl-token';
 import * as anchor from '@project-serum/anchor';
 // eslint-disable-next-line node/no-unpublished-import

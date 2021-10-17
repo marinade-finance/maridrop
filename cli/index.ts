@@ -1,9 +1,11 @@
 /* eslint-disable no-process-exit */
 import {Command} from 'commander';
+import {closeTreasury} from './closeTreasury';
 import {createPromise} from './createPromise';
 import {createTreasury} from './createTreasury';
 import {setup} from './global';
 import {setPromiseAmount} from './setPromiseAmount';
+import { showTreasury } from './slow';
 
 const expandTilde = require('expand-tilde');
 
@@ -58,6 +60,25 @@ program
   .action(async (treasury, user, amount, options) => {
     await setPromiseAmount(treasury, user, amount, options);
   });
+
+program
+  .command('close-treasury')
+  .argument('treasury', 'Treasury')
+  .option(
+    '--token-mint <pubkey>',
+    'Token mint',
+    'MNDEFzGvMt87ueuHvVU9VcTqsAP5b3fTGPsHuuPA5ey'
+  )
+  .option('-a, --admin <admin>', 'Admin authority')
+  .option('-s, --simulate', 'Simulate')
+  .action(async (treasury, options) => {
+    await closeTreasury(treasury, options);
+  });
+
+program
+  .command('show-treasury')
+  .argument('treasury', 'Treasury')
+  .action(showTreasury);
 
 program.parseAsync(process.argv).then(
   () => process.exit(),

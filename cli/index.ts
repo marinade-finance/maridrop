@@ -3,9 +3,11 @@ import {Command} from 'commander';
 import {closeTreasury} from './closeTreasury';
 import {createPromise} from './createPromise';
 import {createTreasury} from './createTreasury';
+import {generateRandomPromises} from './generateRandomPromises';
 import {setup} from './global';
 import {setPromiseAmount} from './setPromiseAmount';
-import { showTreasury } from './slow';
+import {showTreasury} from './slow';
+import {updatePromises} from './updatePromises';
 
 const expandTilde = require('expand-tilde');
 
@@ -74,6 +76,23 @@ program
   .action(async (treasury, options) => {
     await closeTreasury(treasury, options);
   });
+
+program
+  .command('update-promises')
+  .argument('treasury', 'Treasury')
+  .argument('input', 'Input file')
+  .option('-a, --admin <admin>', 'Admin authority')
+  .option('-s, --simulate', 'Simulate')
+  .action(updatePromises);
+
+program
+  .command('generate-random-promises')
+  .argument('output', 'JSON output file path')
+  .argument('keypairs', 'secret keys output')
+  .option('--min-amount <amount>', 'min amount')
+  .option('--max-amount <amount>', 'max amount')
+  .option('--total-amount <amount>', 'total')
+  .action(generateRandomPromises);
 
 program
   .command('show-treasury')

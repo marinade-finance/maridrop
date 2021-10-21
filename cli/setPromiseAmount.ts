@@ -52,7 +52,7 @@ export async function setPromiseAmount(
   );
   if (simulate) {
     console.log(
-      await maridropProgram!.rpc.setPromiseAmount(amountBN, {
+      await maridropProgram!.simulate.setPromiseAmount(amountBN, {
         accounts: {
           promiseAccount: promiseKey,
           treasuryAccount: treasuryPubkey,

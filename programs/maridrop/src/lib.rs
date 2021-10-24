@@ -18,10 +18,15 @@ pub mod maridrop {
         admin_authority: Pubkey,
         start_time: i64,
     ) -> ProgramResult {
-        ctx.accounts.process(
-            admin_authority,
-            start_time,
-        )
+        ctx.accounts.process(admin_authority, start_time)
+    }
+
+    pub fn set_admin(ctx: Context<SetAdmin>, new_admin_authority: Pubkey) -> ProgramResult {
+        ctx.accounts.process(new_admin_authority)
+    }
+
+    pub fn set_start_time(ctx: Context<SetStartTime>, new_start_time: i64) -> ProgramResult {
+        ctx.accounts.process(new_start_time)
     }
 
     pub fn close_treasury(ctx: Context<CloseTreasury>) -> ProgramResult {
@@ -38,7 +43,7 @@ pub mod maridrop {
 
     pub fn set_promise_amount(
         ctx: Context<SetPromiseAmount>,
-        new_total_amount: u64
+        new_total_amount: u64,
     ) -> ProgramResult {
         ctx.accounts.process(new_total_amount)
     }

@@ -71,6 +71,40 @@ impl<'info> InitTreasury<'info> {
 }
 
 #[derive(Accounts)]
+pub struct SetAdmin<'info> {
+    #[account(mut, has_one = admin_authority)]
+    pub treasury_account: Account<'info, Treasury>,
+    pub admin_authority: Signer<'info>,
+}
+
+impl<'info> SetAdmin<'info> {
+    pub fn process(
+        &mut self,
+        new_admin_authority: Pubkey,
+    ) -> ProgramResult {
+        self.treasury_account.admin_authority = new_admin_authority;
+        Ok(())
+    } 
+}
+
+#[derive(Accounts)]
+pub struct SetStartTime<'info> {
+    #[account(mut, has_one = admin_authority)]
+    pub treasury_account: Account<'info, Treasury>,
+    pub admin_authority: Signer<'info>,
+}
+
+impl<'info> SetStartTime<'info> {
+    pub fn process(
+        &mut self,
+        start_time: UnixTimestamp,
+    ) -> ProgramResult {
+        self.treasury_account.start_time = start_time;
+        Ok(())
+    } 
+}
+
+#[derive(Accounts)]
 pub struct CloseTreasury<'info> {
     #[account(mut, has_one = admin_authority, has_one = token_store)]
     pub treasury_account: Account<'info, Treasury>,

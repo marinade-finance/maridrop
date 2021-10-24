@@ -9,7 +9,7 @@ describe('maridrop', () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.Provider.env());
 
-  const adminAuthority = new anchor.web3.Keypair();
+  // const adminAuthority = new anchor.web3.Keypair();
   const mndeMint = new anchor.web3.Keypair();
   let myMndeAccount: anchor.web3.PublicKey | undefined;
   const program = anchor.workspace.Maridrop;
@@ -66,6 +66,7 @@ describe('maridrop', () => {
   });
 
   async function createTreasury(
+    adminAuthority: anchor.web3.Keypair,
     treasury: anchor.web3.Keypair,
     tokenStore: anchor.web3.Keypair,
     startTime?: Date
@@ -139,6 +140,7 @@ describe('maridrop', () => {
   }
 
   async function createPromise(
+    adminAuthority: anchor.web3.Keypair,
     treasury: anchor.web3.PublicKey,
     tokenStore: anchor.web3.PublicKey,
     user: anchor.web3.PublicKey
@@ -185,16 +187,18 @@ describe('maridrop', () => {
   }
 
   it('Can create treasury', async () => {
+    const adminAuthority = new anchor.web3.Keypair();
     const treasury = new anchor.web3.Keypair();
     const tokenStore = new anchor.web3.Keypair();
-    await createTreasury(treasury, tokenStore);
+    await createTreasury(adminAuthority, treasury, tokenStore);
   });
 
   it('It can close empty treasury', async () => {
+    const adminAuthority = new anchor.web3.Keypair();
     const treasury = new anchor.web3.Keypair();
     const tokenStore = new anchor.web3.Keypair();
     const rentCollector = new anchor.web3.Keypair();
-    await createTreasury(treasury, tokenStore);
+    await createTreasury(adminAuthority, treasury, tokenStore);
 
     const [tokenStoreAuthority] =
       await anchor.web3.PublicKey.findProgramAddress(
@@ -217,11 +221,13 @@ describe('maridrop', () => {
   });
 
   it('Can create promise', async () => {
+    const adminAuthority = new anchor.web3.Keypair();
     const treasury = new anchor.web3.Keypair();
     const tokenStore = new anchor.web3.Keypair();
-    await createTreasury(treasury, tokenStore);
+    await createTreasury(adminAuthority, treasury, tokenStore);
     const user = new anchor.web3.Keypair();
     const promiseKey = await createPromise(
+      adminAuthority,
       treasury.publicKey,
       tokenStore.publicKey,
       user.publicKey
@@ -229,9 +235,10 @@ describe('maridrop', () => {
   });
 
   it('Can not close treasury with promise', async () => {
+    const adminAuthority = new anchor.web3.Keypair();
     const treasury = new anchor.web3.Keypair();
     const tokenStore = new anchor.web3.Keypair();
-    await createTreasury(treasury, tokenStore);
+    await createTreasury(adminAuthority, treasury, tokenStore);
     const user = new anchor.web3.Keypair();
     const rentCollector = new anchor.web3.Keypair();
     const [tokenStoreAuthority] =
@@ -240,6 +247,7 @@ describe('maridrop', () => {
         program.programId
       );
     const promiseKey = await createPromise(
+      adminAuthority,
       treasury.publicKey,
       tokenStore.publicKey,
       user.publicKey
@@ -264,11 +272,13 @@ describe('maridrop', () => {
   });
 
   it('Can not increase promise without funds', async () => {
+    const adminAuthority = new anchor.web3.Keypair();
     const treasury = new anchor.web3.Keypair();
     const tokenStore = new anchor.web3.Keypair();
-    await createTreasury(treasury, tokenStore);
+    await createTreasury(adminAuthority, treasury, tokenStore);
     const user = new anchor.web3.Keypair();
     const promiseKey = await createPromise(
+      adminAuthority,
       treasury.publicKey,
       tokenStore.publicKey,
       user.publicKey
@@ -293,11 +303,13 @@ describe('maridrop', () => {
   });
 
   it('Can increase promise with funds', async () => {
+    const adminAuthority = new anchor.web3.Keypair();
     const treasury = new anchor.web3.Keypair();
     const tokenStore = new anchor.web3.Keypair();
-    await createTreasury(treasury, tokenStore);
+    await createTreasury(adminAuthority, treasury, tokenStore);
     const user = new anchor.web3.Keypair();
     const promiseKey = await createPromise(
+      adminAuthority,
       treasury.publicKey,
       tokenStore.publicKey,
       user.publicKey
@@ -320,9 +332,10 @@ describe('maridrop', () => {
   });
 
   it('User can claim promise', async () => {
+    const adminAuthority = new anchor.web3.Keypair();
     const treasury = new anchor.web3.Keypair();
     const tokenStore = new anchor.web3.Keypair();
-    await createTreasury(treasury, tokenStore);
+    await createTreasury(adminAuthority, treasury, tokenStore);
     const user = new anchor.web3.Keypair();
 
     const createUserAccountTransaction = new anchor.web3.Transaction({
@@ -347,6 +360,7 @@ describe('maridrop', () => {
     await anchor.getProvider().send(createUserAccountTransaction);
 
     const promiseKey = await createPromise(
+      adminAuthority,
       treasury.publicKey,
       tokenStore.publicKey,
       user.publicKey
@@ -398,9 +412,10 @@ describe('maridrop', () => {
   });
 
   it('User can claim promise multiple times', async () => {
+    const adminAuthority = new anchor.web3.Keypair();
     const treasury = new anchor.web3.Keypair();
     const tokenStore = new anchor.web3.Keypair();
-    await createTreasury(treasury, tokenStore);
+    await createTreasury(adminAuthority, treasury, tokenStore);
     const user = new anchor.web3.Keypair();
 
     const createUserAccountTransaction = new anchor.web3.Transaction({
@@ -425,6 +440,7 @@ describe('maridrop', () => {
     await anchor.getProvider().send(createUserAccountTransaction);
 
     const promiseKey = await createPromise(
+      adminAuthority,
       treasury.publicKey,
       tokenStore.publicKey,
       user.publicKey
@@ -483,9 +499,10 @@ describe('maridrop', () => {
   });
 
   it('Can close promise and treasury', async () => {
+    const adminAuthority = new anchor.web3.Keypair();
     const treasury = new anchor.web3.Keypair();
     const tokenStore = new anchor.web3.Keypair();
-    await createTreasury(treasury, tokenStore);
+    await createTreasury(adminAuthority, treasury, tokenStore);
     const rentCollector = new anchor.web3.Keypair();
     const [tokenStoreAuthority] =
       await anchor.web3.PublicKey.findProgramAddress(
@@ -497,6 +514,7 @@ describe('maridrop', () => {
       const user = new anchor.web3.Keypair();
 
       await createPromise(
+        adminAuthority,
         treasury.publicKey,
         tokenStore.publicKey,
         user.publicKey
@@ -527,6 +545,60 @@ describe('maridrop', () => {
         tokenProgram: token.TOKEN_PROGRAM_ID,
       },
       signers: [adminAuthority],
+    });
+  });
+
+  it('It can set admin', async () => {
+    const adminAuthority = new anchor.web3.Keypair();
+    const treasury = new anchor.web3.Keypair();
+    const tokenStore = new anchor.web3.Keypair();
+    const rentCollector = new anchor.web3.Keypair();
+    await createTreasury(adminAuthority, treasury, tokenStore);
+
+    const [tokenStoreAuthority] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        [new TextEncoder().encode('treasury'), treasury.publicKey.toBytes()],
+        program.programId
+      );
+
+    const newAdminAuthority = new anchor.web3.Keypair();
+    program.rpc.setAdmin(newAdminAuthority.publicKey, {
+      accounts: {
+        treasuryAccount: treasury.publicKey,
+        adminAuthority: adminAuthority.publicKey,
+      },
+      signers: [adminAuthority],
+    });
+
+    try {
+      await program.rpc.closeTreasury({
+        accounts: {
+          treasuryAccount: treasury.publicKey,
+          adminAuthority: adminAuthority.publicKey,
+          tokenAuthority: tokenStoreAuthority,
+          tokenStore: tokenStore.publicKey,
+          transferTokenTo: myMndeAccount,
+          rentCollector: rentCollector.publicKey,
+          tokenProgram: token.TOKEN_PROGRAM_ID,
+        },
+        signers: [adminAuthority],
+      });
+      chai.assert.fail('Admin must be changed');
+    } catch (e) {
+      // OK must be here
+    }
+
+    await program.rpc.closeTreasury({
+      accounts: {
+        treasuryAccount: treasury.publicKey,
+        adminAuthority: newAdminAuthority.publicKey,
+        tokenAuthority: tokenStoreAuthority,
+        tokenStore: tokenStore.publicKey,
+        transferTokenTo: myMndeAccount,
+        rentCollector: rentCollector.publicKey,
+        tokenProgram: token.TOKEN_PROGRAM_ID,
+      },
+      signers: [newAdminAuthority],
     });
   });
 });

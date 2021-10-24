@@ -13,7 +13,6 @@ pub struct Treasury {
     pub total_non_claimed: u64, // <= token_store.amount, how much is promised but not yet claimed now
     pub promise_count: u64,     // number of unique user promise accounts
     pub start_time: i64,        // Prevent claiming earlier
-    pub end_time: i64,          // Can not close earlier
     pub token_authority_bump: u8,
 }
 
@@ -33,7 +32,6 @@ impl<'info> InitTreasury<'info> {
         &mut self,
         admin_authority: Pubkey,
         start_time: UnixTimestamp,
-        end_time: UnixTimestamp,
     ) -> ProgramResult {
         let (token_authority, token_authority_bump) = Pubkey::find_program_address(
             &[
@@ -66,7 +64,6 @@ impl<'info> InitTreasury<'info> {
             total_non_claimed: 0,
             promise_count: 0,
             start_time,
-            end_time,
             token_authority_bump,
         };
         Ok(())
@@ -95,10 +92,6 @@ pub struct CloseTreasury<'info> {
 
 impl<'info> CloseTreasury<'info> {
     pub fn process(&mut self) -> ProgramResult {
-        if Clock::get()?.unix_timestamp < self.treasury_account.end_time {
-            return Err(ErrorCode::TooEarlyToClose.into());
-        }
-
         if self.treasury_account.promise_count > 0 {
             return Err(ErrorCode::ClosingTreasuryWithPromises.into());
         }

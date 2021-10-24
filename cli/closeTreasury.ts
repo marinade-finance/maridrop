@@ -8,6 +8,7 @@ import * as token from '@solana/spl-token';
 import {
   anchorProvider,
   connection,
+  getAllPromises,
   maridropProgram,
   parseKeypair,
   parsePubkey,
@@ -54,6 +55,19 @@ export async function closeTreasury(
     [new TextEncoder().encode('treasury'), treasuryPubkey.toBytes()],
     maridropProgram!.programId
   );
+
+  const allPromises = await getAllPromises(treasuryPubkey);
+  for (const {publicKey} of allPromises) {
+    await maridropProgram!.rpc.closePromise({
+      accounts: {
+        promiseAccount: publicKey,
+        treasuryAccount: treasuryPubkey,
+        adminAuthority: adminAuthority.publicKey,
+        rentCollector: walletKeypair!.publicKey,
+      },
+      signers: [adminAuthority],
+    });
+  }
 
   if (simulate) {
     console.log(

@@ -17,12 +17,10 @@ pub mod maridrop {
         ctx: Context<InitTreasury>,
         admin_authority: Pubkey,
         start_time: i64,
-        end_time: i64,
     ) -> ProgramResult {
         ctx.accounts.process(
             admin_authority,
             start_time,
-            end_time,
         )
     }
 

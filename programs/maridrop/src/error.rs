@@ -8,8 +8,6 @@ pub enum ErrorCode {
     TreasuryTokenAccountMustNotBeDelegated,
     #[msg("Treasury token account must not be closeable")]
     TreasuryTokenAccountMustNotBeCloseable,
-    #[msg("Too early to close")]
-    TooEarlyToClose,
     #[msg("Can not close treasury while it has not closed promises")]
     ClosingTreasuryWithPromises,
     #[msg("Can not close by moving tokens to the same account")]
@@ -18,6 +16,4 @@ pub enum ErrorCode {
     InsufficientPromiseFunds,
     #[msg("Airdrop is not started yet")]
     NonStarted,
-    #[msg("Can not remove already promised after airdrop start")]
-    CanNotWithdrawPromiseAfterStart
 }

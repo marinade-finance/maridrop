@@ -68,8 +68,7 @@ describe('maridrop', () => {
   async function createTreasury(
     treasury: anchor.web3.Keypair,
     tokenStore: anchor.web3.Keypair,
-    startTime?: Date,
-    endTime?: Date
+    startTime?: Date
   ) {
     const [tokenStoreAuthority] =
       await anchor.web3.PublicKey.findProgramAddress(
@@ -119,15 +118,10 @@ describe('maridrop', () => {
       ? new anchor.BN(Math.round(startTime.getTime() / 1000))
       : new anchor.BN(0);
 
-    const endTs = endTime
-      ? new anchor.BN(Math.round(endTime.getTime() / 1000))
-      : new anchor.BN(0);
-
     transaction.add(
       await program.instruction.initTreasury(
         adminAuthority.publicKey,
         startTs,
-        endTs,
         {
           accounts: {
             treasuryAccount: treasury.publicKey,
@@ -488,11 +482,10 @@ describe('maridrop', () => {
     }
   });
 
-  it('Can close promise and treasury after endTime', async () => {
+  it('Can close promise and treasury', async () => {
     const treasury = new anchor.web3.Keypair();
     const tokenStore = new anchor.web3.Keypair();
     await createTreasury(treasury, tokenStore);
-    const user = new anchor.web3.Keypair();
     const rentCollector = new anchor.web3.Keypair();
     const [tokenStoreAuthority] =
       await anchor.web3.PublicKey.findProgramAddress(
@@ -500,20 +493,29 @@ describe('maridrop', () => {
         program.programId
       );
 
-    const promiseKey = await createPromise(
-      treasury.publicKey,
-      tokenStore.publicKey,
-      user.publicKey
+    for (let i = 0; i < 2; i++) {
+      const user = new anchor.web3.Keypair();
+
+      await createPromise(
+        treasury.publicKey,
+        tokenStore.publicKey,
+        user.publicKey
+      );
+    }
+    const allPromises = await program.account.promise.all(
+      Buffer.from(treasury.publicKey.toBytes())
     );
-    await program.rpc.closePromise({
-      accounts: {
-        promiseAccount: promiseKey,
-        treasuryAccount: treasury.publicKey,
-        adminAuthority: adminAuthority.publicKey,
-        rentCollector: rentCollector.publicKey,
-      },
-      signers: [adminAuthority],
-    });
+    for (const {publicKey} of allPromises) {
+      await program.rpc.closePromise({
+        accounts: {
+          promiseAccount: publicKey,
+          treasuryAccount: treasury.publicKey,
+          adminAuthority: adminAuthority.publicKey,
+          rentCollector: rentCollector.publicKey,
+        },
+        signers: [adminAuthority],
+      });
+    }
     await program.rpc.closeTreasury({
       accounts: {
         treasuryAccount: treasury.publicKey,

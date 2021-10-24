@@ -58,3 +58,12 @@ export async function parsePubkey(str: string): Promise<PublicKey> {
     return (await parseKeypair(str)).publicKey;
   }
 }
+/*
+// From anchor code
+function accountDiscriminator(name: string): Buffer {
+  return Buffer.from(anchor.utils.sha256.hash(`account:${name}`)).slice(0, 8);
+}*/
+
+export async function getAllPromises(treasury: anchor.web3.PublicKey) {
+  return maridropProgram!.account.promise.all(Buffer.from(treasury.toBytes()));
+}

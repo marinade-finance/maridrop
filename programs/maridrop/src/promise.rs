@@ -6,8 +6,8 @@ use crate::{error::ErrorCode, treasury::Treasury};
 #[account] // one per user, gift for the user
 #[derive(Debug, Default)]
 pub struct Promise {
-    pub target_authority: Pubkey, // user's pubkey
     pub treasury_account: Pubkey, // main state
+    pub target_authority: Pubkey, // user's pubkey
     pub total_amount: u64,        // gift amount
     pub non_claimed_amount: u64,
 }
@@ -61,23 +61,25 @@ pub struct SetPromiseAmount<'info> {
 
 impl<'info> SetPromiseAmount<'info> {
     pub fn process(&mut self, new_total_amount: u64) -> ProgramResult {
-        if Clock::get()?.unix_timestamp >= self.treasury_account.start_time
-            && new_total_amount < self.promise_account.total_amount
-        {
-            return Err(ErrorCode::CanNotWithdrawPromiseAfterStart.into());
-        }
         let claimed_amount =
             self.promise_account.total_amount - self.promise_account.non_claimed_amount;
-        if new_total_amount < claimed_amount {
-            // Must be unreachable
-            return Err(ErrorCode::CanNotWithdrawPromiseAfterStart.into());
-        }
+        let new_total_amount = if new_total_amount >= claimed_amount {
+            new_total_amount
+        } else {
+            msg!("Can not withdraw already claimed");
+            claimed_amount
+        };
         let new_non_claimed = new_total_amount - claimed_amount;
-        self.treasury_account.total_promised = (self.treasury_account.total_promised
-            + new_total_amount)
-            .saturating_sub(self.promise_account.total_amount);
-        let new_total_non_claimed = (self.treasury_account.total_non_claimed + new_non_claimed)
-            .saturating_sub(self.promise_account.non_claimed_amount);
+        self.treasury_account.total_promised = self
+            .treasury_account
+            .total_promised
+            .saturating_sub(self.promise_account.total_amount) // old one
+            + new_total_amount;
+        let new_total_non_claimed = self
+            .treasury_account
+            .total_non_claimed
+            .saturating_sub(self.promise_account.non_claimed_amount) // old one
+            + new_non_claimed;
         if new_total_non_claimed > self.token_store.amount {
             return Err(ErrorCode::InsufficientPromiseFunds.into());
         }
@@ -156,10 +158,6 @@ pub struct ClosePromise<'info> {
 
 impl<'info> ClosePromise<'info> {
     pub fn process(&mut self) -> ProgramResult {
-        if Clock::get()?.unix_timestamp < self.treasury_account.end_time {
-            return Err(ErrorCode::TooEarlyToClose.into());
-        }
-
         self.treasury_account.total_non_claimed = self
             .treasury_account
             .total_non_claimed

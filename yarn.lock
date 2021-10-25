@@ -99,9 +99,9 @@
     fastq "^1.6.0"
 
 "@project-serum/anchor@^0.17.1":
-  version "0.17.0"
-  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.17.0.tgz#99a2cc59cae2939c1db1197950b7b606319ea7a8"
-  integrity sha512-vctZHZD5rUP1WXUUaJFdKl+1u0dE+O2+jejmYcb0InAZiwXdGAW8mX47U902voT94PdCr0aNHuyOQ8I75nfinw==
+  version "0.18.0"
+  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.18.0.tgz#867144282e59482230f797f73ee9f5634f846061"
+  integrity sha512-WTm+UB93MoxyCbjnHIibv/uUEoO/5gL4GEtE/aMioLF8Z4i0vCMPnvAN0xpk9VBu3t7ld2DcCE/L+6Z7dwU++w==
   dependencies:
     "@project-serum/borsh" "^0.2.2"
     "@solana/web3.js" "^1.17.0"
@@ -245,6 +245,11 @@
   version "4.14.175"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.175.tgz#b78dfa959192b01fae0ad90e166478769b215f45"
   integrity sha512-XmdEOrKQ8a1Y/yxQFOMbC47G/V2VDO1GvMRnl4O75M4GW/abC5tnfzadQYkqEveqRM1dEJGFFegfPNA2vvx2iw==
+
+"@types/lodash@^4.14.176":
+  version "4.14.176"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.176.tgz#641150fc1cda36fbfa329de603bbb175d7ee20c0"
+  integrity sha512-xZmuPTa3rlZoIbtDUyJKZQimJV3bxCmzMIO2c9Pz9afyDro6kr7R79GwcB6mRhuoPmV2p1Vb66WOJH7F886WKQ==
 
 "@types/minimist@^1.2.0":
   version "1.2.2"
@@ -2040,7 +2045,7 @@ lodash.truncate@^4.4.2:
   resolved "https://registry.yarnpkg.com/lodash.truncate/-/lodash.truncate-4.4.2.tgz#5a350da0b1113b837ecfffd5812cbe58d6eae193"
   integrity sha1-WjUNoLERO4N+z//VgSy+WNbq4ZM=
 
-lodash@^4.17.19, lodash@^4.17.20:
+lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.21:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==

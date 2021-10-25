@@ -5,6 +5,7 @@ import {Keypair, LAMPORTS_PER_SOL, PublicKey} from '@solana/web3.js';
 // eslint-disable-next-line node/no-unsupported-features/node-builtins
 import {TextEncoder} from 'util';
 import * as token from '@solana/spl-token';
+import * as _ from 'lodash';
 import {
   anchorProvider,
   maridropProgram,
@@ -16,7 +17,7 @@ const expandTilde = require('expand-tilde');
 
 export async function updatePromises(
   treasury: string,
-  input: string,
+  inputs: string[],
   {
     admin,
     simulate,
@@ -29,9 +30,16 @@ export async function updatePromises(
   const treasuryAccount = await maridropProgram!.account.treasury.fetch(
     treasuryPubkey
   );
-  const inputJSON = JSON.parse(
-    await fs.readFile(expandTilde(input), 'utf-8')
-  ) as Record<string, number>;
+  const inputJSONs = (
+    await Promise.all(
+      inputs.map(input => fs.readFile(expandTilde(input), 'utf-8'))
+    )
+  ).map(input => JSON.parse(input));
+  const resultJSON: Record<string, number> = {};
+  for (const inputJSON of inputJSONs) {
+    _.mergeWith(resultJSON, inputJSON, (a, b) => (a || 0) + (b || 0));
+  }
+
   const adminAuthority = admin ? await parseKeypair(admin) : walletKeypair!;
   if (!adminAuthority.publicKey.equals(treasuryAccount.adminAuthority)) {
     throw new Error(
@@ -75,22 +83,22 @@ export async function updatePromises(
       }
 
       if (
-        (!promises[i] && inputJSON[userBatch[i]] > 0) ||
+        (!promises[i] && resultJSON[userBatch[i]] > 0) ||
         (promises[i] &&
           !(promises[i] as any).totalAmount.eq(
-            new anchor.BN(inputJSON[userBatch[i]] * LAMPORTS_PER_SOL)
+            new anchor.BN(resultJSON[userBatch[i]] * LAMPORTS_PER_SOL)
           ))
       ) {
         changedPromises.push({
           promiseAddress: promiseAddresses[i][0],
-          amount: new anchor.BN(inputJSON[userBatch[i]] * LAMPORTS_PER_SOL),
+          amount: new anchor.BN(resultJSON[userBatch[i]] * LAMPORTS_PER_SOL),
         });
       }
     }
     userBatch = [];
   };
 
-  for (const user in inputJSON) {
+  for (const user in resultJSON) {
     userBatch.push(user);
     if (userBatch.length > 64) {
       await readUserBatch();

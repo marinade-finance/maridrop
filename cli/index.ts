@@ -80,7 +80,7 @@ program
 program
   .command('update-promises')
   .argument('treasury', 'Treasury')
-  .argument('input', 'Input file')
+  .argument('<inputs...>', 'Input files')
   .option('-a, --admin <admin>', 'Admin authority')
   .option('-s, --simulate', 'Simulate')
   .action(updatePromises);

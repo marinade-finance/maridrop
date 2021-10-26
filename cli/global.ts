@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor';
-import {PublicKey} from '@solana/web3.js';
-import {Command} from 'commander';
+import { PublicKey } from '@solana/web3.js';
+import { Command } from 'commander';
 import fs from 'mz/fs';
 const expandTilde = require('expand-tilde');
 // eslint-disable-next-line node/no-unpublished-import

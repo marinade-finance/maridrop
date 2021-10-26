@@ -1,13 +1,13 @@
 /* eslint-disable no-process-exit */
-import {Command} from 'commander';
-import {closeTreasury} from './closeTreasury';
-import {createPromise} from './createPromise';
-import {createTreasury} from './createTreasury';
-import {generateRandomPromises} from './generateRandomPromises';
-import {setup} from './global';
-import {setPromiseAmount} from './setPromiseAmount';
-import {showTreasury} from './slow';
-import {updatePromises} from './updatePromises';
+import { Command } from 'commander';
+import { closeTreasury } from './closeTreasury';
+import { createPromise } from './createPromise';
+import { createTreasury } from './createTreasury';
+import { generateRandomPromises } from './generateRandomPromises';
+import { setup } from './global';
+import { setPromiseAmount } from './setPromiseAmount';
+import { showTreasury } from './show';
+import { updatePromises } from './updatePromises';
 
 const expandTilde = require('expand-tilde');
 

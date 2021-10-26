@@ -1,9 +1,9 @@
-import {Command} from 'commander';
+import { Command } from 'commander';
 import * as anchor from '@project-serum/anchor';
 import fs from 'mz/fs';
-import {Keypair, PublicKey} from '@solana/web3.js';
+import { Keypair, PublicKey } from '@solana/web3.js';
 // eslint-disable-next-line node/no-unsupported-features/node-builtins
-import {TextEncoder} from 'util';
+import { TextEncoder } from 'util';
 import * as token from '@solana/spl-token';
 import {
   anchorProvider,
@@ -42,6 +42,7 @@ export async function createTreasury({
   const adminAuthority = admin
     ? await parsePubkey(admin)
     : anchorProvider!.wallet.publicKey;
+  console.log(`Admin: ${adminAuthority.toBase58()}`);
   const [tokenStoreAuthority] = await anchor.web3.PublicKey.findProgramAddress(
     [new TextEncoder().encode('treasury'), treasuryKeypair.publicKey.toBytes()],
     maridropProgram!.programId

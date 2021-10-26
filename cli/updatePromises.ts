@@ -1,9 +1,9 @@
-import {Command} from 'commander';
+import { Command } from 'commander';
 import * as anchor from '@project-serum/anchor';
 import fs from 'mz/fs';
-import {Keypair, LAMPORTS_PER_SOL, PublicKey} from '@solana/web3.js';
+import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 // eslint-disable-next-line node/no-unsupported-features/node-builtins
-import {TextEncoder} from 'util';
+import { TextEncoder } from 'util';
 import * as token from '@solana/spl-token';
 import * as _ from 'lodash';
 import {

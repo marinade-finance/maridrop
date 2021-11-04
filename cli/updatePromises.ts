@@ -15,6 +15,12 @@ import {
 } from './global';
 const expandTilde = require('expand-tilde');
 
+const STEP = 10;
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function updatePromises(
   treasury: string,
   inputs: string[],
@@ -96,11 +102,12 @@ export async function updatePromises(
       }
     }
     userBatch = [];
+    await sleep(1000);
   };
 
   for (const user in resultJSON) {
     userBatch.push(user);
-    if (userBatch.length > 64) {
+    if (userBatch.length > 32) {
       await readUserBatch();
     }
   }
@@ -111,11 +118,11 @@ export async function updatePromises(
   if (simulate) {
     console.log('TODO: simulate');
   } else {
-    for (let i = 0; i < addedPromises.length; i += 5) {
+    for (let i = 0; i < addedPromises.length; i += STEP) {
       const tx = new anchor.web3.Transaction({
         feePayer: walletKeypair!.publicKey,
       });
-      for (const promise of addedPromises.slice(i, i + 5)) {
+      for (const promise of addedPromises.slice(i, i + STEP)) {
         tx.add(
           maridropProgram!.instruction.initPromise(
             promise.user,
@@ -138,11 +145,11 @@ export async function updatePromises(
       );
     }
 
-    for (let i = 0; i < changedPromises.length; i += 5) {
+    for (let i = 0; i < changedPromises.length; i += STEP) {
       const tx = new anchor.web3.Transaction({
         feePayer: walletKeypair!.publicKey,
       });
-      for (const promise of changedPromises.slice(i, i + 5)) {
+      for (const promise of changedPromises.slice(i, i + STEP)) {
         tx.add(
           maridropProgram!.instruction.setPromiseAmount(promise.amount, {
             accounts: {

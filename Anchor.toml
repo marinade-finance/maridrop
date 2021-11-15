@@ -1,14 +1,14 @@
 anchor_version = "0.17.0"
 
-[programs.localnet]
+[programs.mainnet]
 maridrop = "mrdpo5HyUm6ajvGJzBDjLTsNM41cb9hXzZq5L5WXy9z"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
-wallet = "/home/aankor/.config/solana/id.json"
+cluster = "mainnet"
+wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "npx ts-mocha -t 1000000 tests/*.ts"

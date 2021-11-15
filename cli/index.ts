@@ -6,6 +6,7 @@ import { createTreasury } from './createTreasury';
 import { generateRandomPromises } from './generateRandomPromises';
 import { setup } from './global';
 import { setPromiseAmount } from './setPromiseAmount';
+import { setStartTime } from './setStartTime';
 import { showTreasury } from './show';
 import { updatePromises } from './updatePromises';
 
@@ -84,6 +85,16 @@ program
   .option('-a, --admin <admin>', 'Admin authority')
   .option('-s, --simulate', 'Simulate')
   .action(updatePromises);
+
+program
+  .command('set-start-time')
+  .argument('treasury', 'Treasury')
+  .argument('startTime', 'Start time')
+  .option('-a, --admin <admin>', 'Admin authority')
+  .option('-s, --simulate', 'Simulate')
+  .action(async (treasury, startTime, options) => {
+    await setStartTime(treasury, startTime, options);
+  });
 
 program
   .command('generate-random-promises')

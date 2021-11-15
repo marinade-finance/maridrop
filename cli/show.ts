@@ -31,6 +31,5 @@ export async function showTreasury(treasury: string) {
     }`
   );
   console.log(`Promise count ${treasuryAccount.promiseCount.toNumber()}`);
-  console.log(`Start time ${treasuryAccount.startTime.toNumber()}`);
-  console.log(`End time ${treasuryAccount.endTime?.toNumber()}`);
+  console.log(`Start time ${new Date(treasuryAccount.startTime.toNumber() * 1000)}`);
 }

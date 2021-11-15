@@ -27,7 +27,7 @@ export async function createTreasury({
   treasury?: string;
   tokenStore?: string;
   tokenMint: string;
-  startTime?: Date;
+  startTime?: string;
   simulate: boolean;
 }) {
   const treasuryKeypair = treasury
@@ -83,9 +83,11 @@ export async function createTreasury({
     })
   );
 
-  const startTs = startTime
-    ? new anchor.BN(Math.round(new Date(startTime).getTime() / 1000))
-    : new anchor.BN(0);
+  const startDate = startTime? Date.parse(startTime): 0;
+
+  const startTs = startDate
+    ? new anchor.BN(Math.round(startDate / 1000))
+    : new anchor.BN(startTime!);
 
   transaction.add(
     await maridropProgram!.instruction.initTreasury(adminAuthority, startTs, {
